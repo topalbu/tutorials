@@ -29,28 +29,28 @@ int main(int argc, char ** argv)
   auto node = rclcpp::Node::make_shared("set_and_get_parameters");
 
   // TODO(wjwwood): Make the parameter service automatically start with the node.
-  auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
+  //auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
 
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
   while (!parameters_client->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.")
+      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.");
       return 0;
     }
-    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...")
+    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...");
   }
 
   // Set several different types of parameters.
   auto set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("foo", 2),
-    rclcpp::parameter::ParameterVariant("bar", "hello"),
-    rclcpp::parameter::ParameterVariant("baz", 1.45),
-    rclcpp::parameter::ParameterVariant("foobar", true),
+    rclcpp::Parameter("foo", 2),
+    rclcpp::Parameter("bar", "hello"),
+    rclcpp::Parameter("baz", 1.45),
+    rclcpp::Parameter("foobar", true),
   });
   // Check to see if they were set.
   for (auto & result : set_parameters_results) {
     if (!result.successful) {
-      RCLCPP_ERROR(node->get_logger(), "Failed to set parameter: %s", result.reason.c_str())
+      RCLCPP_ERROR(node->get_logger(), "Failed to set parameter: %s", result.reason.c_str());
     }
   }
 
@@ -61,7 +61,7 @@ int main(int argc, char ** argv)
     ss << "\nParameter value (" << parameter.get_type_name() << "): " <<
       parameter.value_to_string();
   }
-  RCLCPP_INFO(node->get_logger(), ss.str().c_str())
+  RCLCPP_INFO(node->get_logger(), ss.str().c_str());
 
   rclcpp::shutdown();
 

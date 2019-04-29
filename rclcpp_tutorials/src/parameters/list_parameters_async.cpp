@@ -29,38 +29,38 @@ int main(int argc, char ** argv)
   auto node = rclcpp::Node::make_shared("list_parameters_async");
 
   // TODO(esteve): Make the parameter service automatically start with the node.
-  auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
+  // auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
 
   auto parameters_client = std::make_shared<rclcpp::AsyncParametersClient>(node);
   while (!parameters_client->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.")
+      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.");
       return 0;
     }
-    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...")
+    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...");
   }
 
-  RCLCPP_INFO(node->get_logger(), "Setting parameters...")
+  RCLCPP_INFO(node->get_logger(), "Setting parameters...");
   // Set several differnet types of parameters.
   auto results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("foo", 2),
-    rclcpp::parameter::ParameterVariant("bar", "hello"),
-    rclcpp::parameter::ParameterVariant("baz", 1.45),
-    rclcpp::parameter::ParameterVariant("foo.first", 8),
-    rclcpp::parameter::ParameterVariant("foo.second", 42),
-    rclcpp::parameter::ParameterVariant("foobar", true),
+    rclcpp::Parameter("foo", 2),
+    rclcpp::Parameter("bar", "hello"),
+    rclcpp::Parameter("baz", 1.45),
+    rclcpp::Parameter("foo.first", 8),
+    rclcpp::Parameter("foo.second", 42),
+    rclcpp::Parameter("foobar", true),
   });
   // Wait for the result.
   rclcpp::spin_until_future_complete(node, results);
 
-  RCLCPP_INFO(node->get_logger(), "Listing parameters...")
+  RCLCPP_INFO(node->get_logger(), "Listing parameters...");
   // List the details of a few parameters up to a namespace depth of 10.
   auto parameter_list_future = parameters_client->list_parameters({"foo", "bar"}, 10);
 
   if (rclcpp::spin_until_future_complete(node, parameter_list_future) !=
     rclcpp::executor::FutureReturnCode::SUCCESS)
   {
-    RCLCPP_ERROR(node->get_logger(), "service call failed, exiting tutorial.")
+    RCLCPP_ERROR(node->get_logger(), "service call failed, exiting tutorial.");
     return -1;
   }
   auto parameter_list = parameter_list_future.get();
@@ -74,7 +74,7 @@ int main(int argc, char ** argv)
   for (auto & prefix : parameter_list.prefixes) {
     ss << "\n " << prefix;
   }
-  RCLCPP_INFO(node->get_logger(), ss.str().c_str())
+  RCLCPP_INFO(node->get_logger(), ss.str().c_str());
 
   rclcpp::shutdown();
 

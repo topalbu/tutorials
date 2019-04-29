@@ -38,7 +38,7 @@ void on_parameter_event(
     ss << "\n  " << deleted_parameter.name;
   }
   ss << "\n";
-  RCLCPP_INFO(logger, ss.str().c_str())
+  RCLCPP_INFO(logger, ss.str().c_str());
 }
 
 int main(int argc, char ** argv)
@@ -51,15 +51,15 @@ int main(int argc, char ** argv)
   auto node = rclcpp::Node::make_shared("parameter_events");
 
   // TODO(esteve): Make the parameter service automatically start with the node.
-  auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
+  //auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
 
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
   while (!parameters_client->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.")
+      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.");
       return 0;
     }
-    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...")
+    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...");
   }
 
   // Setup callback for changes to parameters.
@@ -71,16 +71,16 @@ int main(int argc, char ** argv)
 
   // Set several differnet types of parameters.
   auto set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("foo", 2),
-    rclcpp::parameter::ParameterVariant("bar", "hello"),
-    rclcpp::parameter::ParameterVariant("baz", 1.45),
-    rclcpp::parameter::ParameterVariant("foobar", true),
+    rclcpp::Parameter("foo", 2),
+    rclcpp::Parameter("bar", "hello"),
+    rclcpp::Parameter("baz", 1.45),
+    rclcpp::Parameter("foobar", true),
   });
 
   // Change the value of some of them.
   set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("foo", 3),
-    rclcpp::parameter::ParameterVariant("bar", "world"),
+    rclcpp::Parameter("foo", 3),
+    rclcpp::Parameter("bar", "world"),
   });
 
   // TODO(wjwwood): Create and use delete_parameter

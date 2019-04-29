@@ -33,11 +33,11 @@ typedef enum
   PARAM_LIST,
 } param_operation_t;
 
-rclcpp::parameter::ParameterVariant
+rclcpp::Parameter
 parse_args(int argc, char ** argv, std::string & remote_node, param_operation_t & op)
 {
   if (argc < 3) {
-    return rclcpp::parameter::ParameterVariant();
+    return rclcpp::Parameter();
   }
 
   std::string verb = argv[1];
@@ -46,7 +46,7 @@ parse_args(int argc, char ** argv, std::string & remote_node, param_operation_t 
   if (verb == "list") {
     op = PARAM_LIST;
     remote_node = name;
-    return rclcpp::parameter::ParameterVariant();
+    return rclcpp::Parameter();
   }
 
   size_t slash = name.find('/');
@@ -54,7 +54,7 @@ parse_args(int argc, char ** argv, std::string & remote_node, param_operation_t 
     (slash == 0) ||
     (slash == (name.size() - 1)))
   {
-    return rclcpp::parameter::ParameterVariant();
+    return rclcpp::Parameter();
   }
   remote_node = name.substr(0, slash);
   std::string variable = name.substr(slash + 1, name.size() - slash - 1);
@@ -62,7 +62,7 @@ parse_args(int argc, char ** argv, std::string & remote_node, param_operation_t 
 
   if ((verb == "get") && (argc == 3)) {
     op = PARAM_GET;
-    return rclcpp::parameter::ParameterVariant(variable, 0);
+    return rclcpp::Parameter(variable, 0);
   }
   if ((verb == "set") && (argc == 4)) {
     op = PARAM_SET;
@@ -70,22 +70,22 @@ parse_args(int argc, char ** argv, std::string & remote_node, param_operation_t 
     char * endptr;
     int l = strtol(value.c_str(), &endptr, 10);
     if ((errno == 0) && (*endptr == '\0')) {
-      return rclcpp::parameter::ParameterVariant(variable, l);
+      return rclcpp::Parameter(variable, l);
     }
     errno = 0;
     double d = strtod(value.c_str(), &endptr);
     if ((errno == 0) && (*endptr == '\0')) {
-      return rclcpp::parameter::ParameterVariant(variable, d);
+      return rclcpp::Parameter(variable, d);
     }
     if ((value == "true") || (value == "True")) {
-      return rclcpp::parameter::ParameterVariant(variable, true);
+      return rclcpp::Parameter(variable, true);
     }
     if ((value == "false") || (value == "False")) {
-      return rclcpp::parameter::ParameterVariant(variable, false);
+      return rclcpp::Parameter(variable, false);
     }
-    return rclcpp::parameter::ParameterVariant(variable, value);
+    return rclcpp::Parameter(variable, value);
   }
-  return rclcpp::parameter::ParameterVariant();
+  return rclcpp::Parameter();
 }
 
 int main(int argc, char ** argv)
@@ -99,7 +99,7 @@ int main(int argc, char ** argv)
   param_operation_t op = PARAM_NONE;
 
   auto var = parse_args(argc, argv, remote_node, op);
-
+  
   if (op == PARAM_NONE) {
     fprintf(stderr, "%s\n", USAGE);
     return 1;
@@ -108,13 +108,13 @@ int main(int argc, char ** argv)
   auto node = rclcpp::Node::make_shared("ros2param");
   auto parameters_client =
     std::make_shared<rclcpp::AsyncParametersClient>(node, remote_node);
-  auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
+  //auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
   while (!parameters_client->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.")
+      RCLCPP_ERROR(node->get_logger(), "Interrupted while waiting for the service. Exiting.");
       return 0;
     }
-    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...")
+    RCLCPP_INFO(node->get_logger(), "service not available, waiting again...");
   }
 
   if (op == PARAM_GET) {
@@ -123,23 +123,23 @@ int main(int argc, char ** argv)
       node, get_parameters_result, std::chrono::milliseconds(1000));
     if ((get_result != rclcpp::executor::FutureReturnCode::SUCCESS) ||
       (get_parameters_result.get().size() != 1) ||
-      (get_parameters_result.get()[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET))
+      (get_parameters_result.get()[0].get_type() == rclcpp::PARAMETER_NOT_SET))
     {
-      RCLCPP_ERROR(node->get_logger(), "Failed to get parameter")
+      RCLCPP_ERROR(node->get_logger(), "Failed to get parameter");
       return 1;
     }
 
     auto result = get_parameters_result.get()[0];
-    if (result.get_type() == rclcpp::parameter::PARAMETER_BOOL) {
-      RCLCPP_INFO(node->get_logger(), "%s", result.get_value<bool>() ? "true" : "false")
-    } else if (result.get_type() == rclcpp::parameter::PARAMETER_INTEGER) {
-      RCLCPP_INFO(node->get_logger(), "%" PRId64, result.get_value<int64_t>())
-    } else if (result.get_type() == rclcpp::parameter::PARAMETER_DOUBLE) {
-      RCLCPP_INFO(node->get_logger(), "%f", result.get_value<double>())
-    } else if (result.get_type() == rclcpp::parameter::PARAMETER_STRING) {
-      RCLCPP_INFO(node->get_logger(), result.get_value<std::string>().c_str())
-    } else if (result.get_type() == rclcpp::parameter::PARAMETER_BYTES) {
-      RCLCPP_ERROR(node->get_logger(), "BYTES type not implemented")
+    if (result.get_type() == rclcpp::PARAMETER_BOOL) {
+      RCLCPP_INFO(node->get_logger(), "%s", result.get_value<bool>() ? "true" : "false");
+    } else if (result.get_type() == rclcpp::PARAMETER_INTEGER) {
+      RCLCPP_INFO(node->get_logger(), "%" PRId64, result.get_value<int64_t>());
+    } else if (result.get_type() == rclcpp::PARAMETER_DOUBLE) {
+      RCLCPP_INFO(node->get_logger(), "%f", result.get_value<double>());
+    } else if (result.get_type() == rclcpp::PARAMETER_STRING) {
+      RCLCPP_INFO(node->get_logger(), result.get_value<std::string>().c_str());
+    } else if (result.get_type() == rclcpp::PARAMETER_BYTE_ARRAY) {
+      RCLCPP_ERROR(node->get_logger(), "BYTE_ARRAY type not implemented");
       return 1;
     }
 
@@ -148,12 +148,12 @@ int main(int argc, char ** argv)
     auto set_result = rclcpp::spin_until_future_complete(
       node, set_parameters_result, std::chrono::milliseconds(1000));
     if (set_result != rclcpp::executor::FutureReturnCode::SUCCESS) {
-      RCLCPP_ERROR(node->get_logger(), "Failed to set parameter")
+      RCLCPP_ERROR(node->get_logger(), "Failed to set parameter");
       return 1;
     }
     auto result = set_parameters_result.get().at(0);
     if (!result.successful) {
-      RCLCPP_ERROR(node->get_logger(), "Error setting parameter: %s", result.reason.c_str())
+      RCLCPP_ERROR(node->get_logger(), "Error setting parameter: %s", result.reason.c_str());
     }
   } else if (op == PARAM_LIST) {
     auto list_parameters_result = parameters_client->list_parameters({}, 10);
@@ -166,12 +166,12 @@ int main(int argc, char ** argv)
       for (auto name : list_parameters_result.get().names) {
         ss << "\n" << name.c_str();
       }
-      RCLCPP_INFO(node->get_logger(), ss.str().c_str())
+      RCLCPP_INFO(node->get_logger(), ss.str().c_str());
     } else if (list_result == rclcpp::executor::FutureReturnCode::TIMEOUT) {
-      RCLCPP_ERROR(node->get_logger(), "Timed out trying to list parameters: 10 seconds")
+      RCLCPP_ERROR(node->get_logger(), "Timed out trying to list parameters: 10 seconds");
       return 1;
     } else {
-      RCLCPP_ERROR(node->get_logger(), "Error listing parameters")
+      RCLCPP_ERROR(node->get_logger(), "Error listing parameters");
       return 1;
     }
   } else {
